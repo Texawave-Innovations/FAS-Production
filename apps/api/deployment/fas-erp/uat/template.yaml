@@ -1,0 +1,6 @@
+# Placeholder CloudFormation/SAM template — apps/api, uat environment.
+# Phase 0: structure only. This will define the environment-specific stack
+# (compute, env vars, secrets, networking) that deploys apps/api to uat.
+# See deployment/api/codebuild/ at the repo root for the CI plumbing
+# (CodeBuild project + IAM role) that invokes this template — the two are
+# deliberately separate concerns (per FAS_ERP_Architecture_Guide.md §10).

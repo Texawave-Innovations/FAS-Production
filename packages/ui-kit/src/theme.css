@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+/*
+ * Shared design tokens for the FAS ERP design system (Tailwind v4, CSS-first
+ * config). This mirrors the @theme block in apps/ui/src/app/globals.css,
+ * which is today's visual source of truth (create-next-app defaults).
+ *
+ * TODO (post-Phase-0, once ui-kit grows real components): make apps/ui
+ * `@import "@fas-erp/ui-kit/theme.css";` instead of declaring its own
+ * @theme block, so tokens live in exactly one place and ui-kit primitives
+ * stay visually in sync with the app by construction.
+ */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}

@@ -1,0 +1,28 @@
+{
+  "name": "@fas-erp/api-types",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Generated OpenAPI TS types + DTOs shared by apps/ui and apps/mobile. Generated, never hand-written — do not add types here directly. Empty scaffold — Phase 0.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "lint": "eslint \"src/**/*.ts\"",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "generate": "echo 'TODO: generate from apps/api OpenAPI spec once the api has routes (see openapi-typescript)' && exit 1"
+  },
+  "devDependencies": {
+    "@fas-erp/config": "workspace:*",
+    "eslint": "^10.10.0",
+    "typescript": "^5.7.0"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "@fas-erp/core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Framework-agnostic business logic, API client, and zod validation schemas, shared by apps/ui and apps/mobile. Empty scaffold — Phase 0.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "lint": "eslint \"src/**/*.ts\"",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@fas-erp/config": "workspace:*",
+    "eslint": "^10.10.0",
+    "typescript": "^5.7.0"
+  }
+}

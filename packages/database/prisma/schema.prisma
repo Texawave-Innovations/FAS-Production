@@ -1,0 +1,17 @@
+// packages/database/prisma/schema.prisma — the single source of truth for
+// the data model (Prisma Migrate only; never hand-edit prod schema).
+//
+// Empty on purpose (Phase 0). Phase 1 adds the platform layer first
+// (organizations, users, roles, permissions, statuses, ...) plus the
+// extensibility baseline (custom_fields/soft-delete/audit columns) — see
+// FAS_ERP_Architecture_Guide.md §6.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}

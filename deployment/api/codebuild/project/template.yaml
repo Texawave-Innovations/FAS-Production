@@ -1,0 +1,5 @@
+# Placeholder CloudFormation template — CI plumbing for apps/api.
+# Defines the CodeBuild project (this rarely changes once set up).
+# Distinct from apps/api/deployment/fas-erp/{dev,uat,prod}/template.yaml,
+# which is the environment-specific stack that actually gets deployed
+# (see FAS_ERP_Architecture_Guide.md §10).

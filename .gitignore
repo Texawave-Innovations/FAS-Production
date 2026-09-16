@@ -141,3 +141,21 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Turborepo
+.turbo/
+
+# Prisma generated client (regenerated via `pnpm --filter @fas-erp/database build`)
+packages/database/generated/
+
+# Next.js
+.next/
+out/
+
+# Expo
+apps/mobile/.expo/
+
+# Env files (root .env.example is the documented template; see also
+# packages/database/.env, which is gitignored separately for local dev)
+.env.local
+.env.*.local
