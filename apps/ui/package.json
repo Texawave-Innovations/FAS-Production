@@ -10,6 +10,8 @@
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@fas-erp/core": "workspace:*",
+    "@fas-erp/ui-kit": "workspace:*",
     "next": "16.3.5",
     "react": "19.2.8",
     "react-dom": "19.2.8"

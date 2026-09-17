@@ -1,5 +1,5 @@
 // packages/core — framework-agnostic business logic, API client, and zod
 // validation schemas shared by apps/ui and apps/mobile.
-//
-// Empty scaffold (Phase 0). No logic yet.
-export {};
+export * from "./api/client.js";
+export * from "./auth/auth-client.js";
+export * from "./auth/types.js";

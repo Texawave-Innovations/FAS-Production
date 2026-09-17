@@ -1,30 +1,7 @@
 @import "tailwindcss";
-
-/* TODO: once packages/ui-kit has real components, replace this @theme
- * block with `@import "@fas-erp/ui-kit/theme.css";` — see that package's
- * src/theme.css for the mirrored tokens and consolidation plan. */
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+@import "@fas-erp/ui-kit/theme.css";
+@custom-variant dark (&:is(.dark *));
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  @apply bg-body-light dark:bg-body-dark text-gray-900 dark:text-white/90 font-sans font-normal tracking-[-0.01em];
 }

@@ -1,18 +1,151 @@
-@import "tailwindcss";
-
 /*
  * Shared design tokens for the FAS ERP design system (Tailwind v4, CSS-first
- * config). This mirrors the @theme block in apps/ui/src/app/globals.css,
- * which is today's visual source of truth (create-next-app defaults).
+ * config) — see docs/FAS_ERP_DESIGN_SYSTEM.md, which this file implements
+ * verbatim for every value that doc states explicitly (brand scale, gray
+ * scale, semantic 500 bases, chart palette, shadows, typography). Where the
+ * doc points at "the original TailAdmin reference" for a full 25–950 ramp
+ * it doesn't inline (success/error/warning), the surrounding tints/shades
+ * below are the standard Untitled UI ramps for those same 500 bases — the
+ * 500 values match the doc exactly; the rest completes the ramp so
+ * `bg-{token}-500/15 text-{token}-700 dark:text-{token}-400` (§9) works.
  *
- * TODO (post-Phase-0, once ui-kit grows real components): make apps/ui
- * `@import "@fas-erp/ui-kit/theme.css";` instead of declaring its own
- * @theme block, so tokens live in exactly one place and ui-kit primitives
- * stay visually in sync with the app by construction.
+ * apps/ui/src/app/globals.css imports this file — see the consolidation
+ * note there. Adding a new color/shadow/type size starts here, never as an
+ * inline style or one-off hex in a component (§1, enforced per
+ * CODING_STANDARDS.md §9's PR checklist).
  */
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@import "tailwindcss";
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  /* ── Brand (primary) — §3 ───────────────────────────────────────────── */
+  --color-brand-25: #f2f7fc;
+  --color-brand-50: #e1edf8;
+  --color-brand-100: #c3daf0;
+  --color-brand-200: #96bfe1;
+  --color-brand-300: #60a5fa;
+  --color-brand-400: #3b82f6;
+  --color-brand-500: #0f4c81;
+  --color-brand-600: #0d4270;
+  --color-brand-700: #0b3860;
+  --color-brand-800: #092e4f;
+  --color-brand-900: #07243e;
+  --color-brand-950: #05192d;
+
+  /* ── Neutral (gray) — §3 ─────────────────────────────────────────────── */
+  --color-gray-25: #fcfcfd;
+  --color-gray-50: #f8fafc;
+  --color-gray-100: #f2f4f7;
+  --color-gray-200: #e4e7ec;
+  --color-gray-300: #d0d5dd;
+  --color-gray-400: #98a2b3;
+  --color-gray-500: #667085;
+  --color-gray-600: #475467;
+  --color-gray-700: #344054;
+  --color-gray-800: #1d2939;
+  --color-gray-900: #101828;
+  --color-gray-950: #0c111d;
+  --color-gray-dark: #1a2231;
+
+  /* ── Semantic — statuses.color_token references these — §3, §6.2 ─────── */
+  --color-success-25: #f6fef9;
+  --color-success-50: #ecfdf3;
+  --color-success-100: #d1fadf;
+  --color-success-200: #a6f4c5;
+  --color-success-300: #6ce9a6;
+  --color-success-400: #32d583;
+  --color-success-500: #12b76a;
+  --color-success-600: #039855;
+  --color-success-700: #027a48;
+  --color-success-800: #05603a;
+  --color-success-900: #054f31;
+  --color-success-950: #053321;
+
+  --color-error-25: #fffbfa;
+  --color-error-50: #fef3f2;
+  --color-error-100: #fee4e2;
+  --color-error-200: #fecdca;
+  --color-error-300: #fda29b;
+  --color-error-400: #f97066;
+  --color-error-500: #f04438;
+  --color-error-600: #d92d20;
+  --color-error-700: #b42318;
+  --color-error-800: #912018;
+  --color-error-900: #7a271a;
+  --color-error-950: #55160c;
+
+  --color-warning-25: #fffcf5;
+  --color-warning-50: #fffaeb;
+  --color-warning-100: #fef0c7;
+  --color-warning-200: #fedf89;
+  --color-warning-300: #fec84b;
+  --color-warning-400: #fdb022;
+  --color-warning-500: #f79009;
+  --color-warning-600: #dc6803;
+  --color-warning-700: #b54708;
+  --color-warning-800: #93370d;
+  --color-warning-900: #7a2e0e;
+  --color-warning-950: #4e1d09;
+
+  /* ── Chart palette (categorical) — §3 ──────────────────────────────────── */
+  --color-chart-1: #3b82f6;
+  --color-chart-2: #12b76a;
+  --color-chart-3: #f79009;
+  --color-chart-4: #7a5af8;
+  --color-chart-5: #0ba5ec;
+
+  /* ── Base / body — §3 ──────────────────────────────────────────────────── */
+  --color-white: #ffffff;
+  --color-black: #101828;
+  --color-body-light: #fdfdfd;
+  --color-body-dark: #0a0f18;
+  --color-sidebar-dark: #1a2332;
+
+  /* ── Fonts — §2 ────────────────────────────────────────────────────────── */
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+  --font-serif: var(--font-merriweather);
+
+  /* ── Typography scale — §7 (marketing/auth sizes + ERP working-screen defaults) */
+  --text-title-2xl: 72px;
+  --text-title-2xl--line-height: 90px;
+  --text-title-xl: 60px;
+  --text-title-xl--line-height: 72px;
+  --text-title-lg: 48px;
+  --text-title-lg--line-height: 60px;
+  --text-title-md: 36px;
+  --text-title-md--line-height: 44px;
+  --text-title-sm: 30px;
+  --text-title-sm--line-height: 38px;
+  --text-theme-xl: 20px;
+  --text-theme-xl--line-height: 30px;
+  --text-theme-sm: 14px;
+  --text-theme-sm--line-height: 20px;
+  --text-theme-xs: 12px;
+  --text-theme-xs--line-height: 18px;
+
+  /* ── Shadows — §6 (light mode) ─────────────────────────────────────────── */
+  --shadow-theme-xs: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+  --shadow-theme-sm: 0px 1px 3px 0px rgba(16, 24, 40, 0.1), 0px 1px 2px 0px rgba(16, 24, 40, 0.06);
+  --shadow-theme-md:
+    0px 4px 8px -2px rgba(16, 24, 40, 0.1), 0px 2px 4px -2px rgba(16, 24, 40, 0.06);
+  --shadow-theme-lg:
+    0px 12px 16px -4px rgba(16, 24, 40, 0.08), 0px 4px 6px -2px rgba(16, 24, 40, 0.03);
+  --shadow-theme-xl:
+    0px 20px 24px -4px rgba(16, 24, 40, 0.08), 0px 8px 8px -4px rgba(16, 24, 40, 0.03);
+  --shadow-focus-ring: 0px 0px 0px 4px rgba(15, 76, 129, 0.12);
+}
+
+/* Shadows get stronger/darker (pure-black rgba, higher opacity), not
+   lighter, in dark mode — §6. Focus ring moves to brand-400 @ 16%. Dark
+   mode itself is the `.dark` class on <html> (§2), not a media query — the
+   "auto" theme-mode setting resolves prefers-color-scheme to that class in
+   app JS once, rather than every consumer duplicating the media query. */
+.dark {
+  --shadow-theme-xs: 0px 1px 2px 0px rgba(0, 0, 0, 0.16);
+  --shadow-theme-sm: 0px 1px 3px 0px rgba(0, 0, 0, 0.3), 0px 1px 2px 0px rgba(0, 0, 0, 0.24);
+  --shadow-theme-md: 0px 4px 8px -2px rgba(0, 0, 0, 0.3), 0px 2px 4px -2px rgba(0, 0, 0, 0.24);
+  --shadow-theme-lg: 0px 12px 16px -4px rgba(0, 0, 0, 0.24), 0px 4px 6px -2px rgba(0, 0, 0, 0.12);
+  --shadow-theme-xl: 0px 20px 24px -4px rgba(0, 0, 0, 0.24), 0px 8px 8px -4px rgba(0, 0, 0, 0.12);
+  --shadow-focus-ring: 0px 0px 0px 4px rgba(59, 130, 246, 0.16);
 }

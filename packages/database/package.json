@@ -2,30 +2,39 @@
   "name": "@fas-erp/database",
   "version": "0.0.0",
   "private": true,
-  "description": "Prisma schema, migrations, and seed scripts — the single source of truth for the data model. Owned/consumed by apps/api via the generated Prisma client. Empty schema — Phase 0.",
+  "description": "Prisma schema, migrations, and seed scripts — the single source of truth for the data model. Owned/consumed by apps/api via the generated Prisma client. Phase 1 — platform layer.",
   "type": "module",
-  "main": "./generated/client/index.js",
-  "types": "./generated/client/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./generated/client/index.d.ts",
-      "default": "./generated/client/index.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "generate": "prisma generate",
     "migrate:dev": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
     "studio": "prisma studio",
-    "build": "prisma generate",
-    "typecheck": "echo 'no TS sources yet — schema.prisma is validated by `prisma generate`'"
+    "seed": "tsx prisma/seed.ts",
+    "build": "prisma generate && tsc -p tsconfig.json",
+    "lint": "eslint \"src/**/*.ts\"",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@prisma/client": "^6.19.3"
+    "@prisma/client": "^6.19.3",
+    "argon2": "^0.45.1"
   },
   "devDependencies": {
+    "@fas-erp/config": "workspace:*",
     "dotenv": "^16.4.7",
+    "eslint": "^10.10.0",
     "prisma": "^6.19.3",
+    "tsx": "^4.23.13",
     "typescript": "^5.7.0"
   }
 }

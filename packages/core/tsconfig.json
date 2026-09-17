@@ -2,7 +2,12 @@
   "extends": "@fas-erp/config/tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    // fetch/Headers/Response are globally available at runtime in both
+    // browsers (apps/ui) and React Native/Expo (apps/mobile) — DOM is added
+    // here purely for their type declarations, not because this package
+    // runs in a browser.
+    "lib": ["ES2022", "DOM"]
   },
   "include": ["src"]
 }

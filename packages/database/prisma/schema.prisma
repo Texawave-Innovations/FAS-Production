@@ -1,17 +1,374 @@
-// packages/database/prisma/schema.prisma — the single source of truth for
-// the data model (Prisma Migrate only; never hand-edit prod schema).
-//
-// Empty on purpose (Phase 0). Phase 1 adds the platform layer first
-// (organizations, users, roles, permissions, statuses, ...) plus the
-// extensibility baseline (custom_fields/soft-delete/audit columns) — see
-// FAS_ERP_Architecture_Guide.md §6.
+// packages/database/prisma/schema.prisma
+// Phase 1 — Platform layer only. Business modules (sales, production, etc.)
+// get their own schema files later, composed in via Prisma's multi-file schema
+// support (schema.prisma + models/*.prisma) once they exist.
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/client"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// TENANCY ROOT
+// ─────────────────────────────────────────────────────────────────────────
+
+model Organization {
+  id     Int    @id @default(autoincrement())
+  name   String
+  slug   String @unique
+
+  customFields Json      @default("{}") @map("custom_fields")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  users             User[]
+  roles             Role[]
+  plants            Plant[]
+  documentSequences DocumentSequence[]
+  auditLogs         AuditLog[]
+  statusHistory     StatusHistory[]
+  attachments       Attachment[]
+  approvalWorkflows ApprovalWorkflow[]
+  approvals         Approval[]
+  comments          Comment[]
+
+  @@map("organizations")
+}
+
+// A Plant is a manufacturing outlet/facility within an Organization. FAS has
+// one today; the schema supports N from day one — adding plant #2 later is a
+// data insert (§below), never a migration. This is the second tenancy level:
+// organization_id is the hard tenant boundary, plant_id is the operational
+// scope within it. See docs/ARCHITECTURE.md §7A for the full model and the
+// "which tables get plant_id" decision rule.
+model Plant {
+  id             Int          @id @default(autoincrement())
+  organizationId Int          @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  name     String
+  code     String // short code used in document numbering, e.g. "CHN", "CBE"
+  address  String?
+  isActive Boolean @default(true) @map("is_active")
+
+  customFields Json      @default("{}") @map("custom_fields")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  userPlantAccess   UserPlantAccess[]
+  documentSequences DocumentSequence[]
+
+  @@unique([organizationId, code])
+  @@map("plants")
+}
+
+// Which plants a user can see/act in. Many-to-many because some roles
+// (corporate finance, org admin) legitimately need multi-plant access, while
+// most shop-floor users belong to exactly one. isDefault picks the plant
+// their session opens into; they switch plants the same way they'd switch
+// orgs, via a plant switcher in the authenticated shell.
+model UserPlantAccess {
+  id Int @id @default(autoincrement())
+
+  userId Int  @map("user_id")
+  user   User @relation(fields: [userId], references: [id])
+
+  plantId Int   @map("plant_id")
+  plant   Plant @relation(fields: [plantId], references: [id])
+
+  isDefault Boolean  @default(false) @map("is_default")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, plantId])
+  @@map("user_plant_access")
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────
+// USERS / RBAC
+// ─────────────────────────────────────────────────────────────────────────
+
+model User {
+  id             Int          @id @default(autoincrement())
+  organizationId Int          @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  email        String
+  passwordHash String  @map("password_hash")
+  firstName    String? @map("first_name")
+  lastName     String? @map("last_name")
+  isActive     Boolean @default(true) @map("is_active")
+
+  customFields Json      @default("{}") @map("custom_fields")
+  createdBy    Int?      @map("created_by")
+  updatedBy    Int?      @map("updated_by")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  userRoles     UserRole[]
+  refreshTokens RefreshToken[]
+  plantAccess   UserPlantAccess[]
+
+  @@unique([organizationId, email])
+  @@map("users")
+}
+
+model Role {
+  id             Int          @id @default(autoincrement())
+  organizationId Int          @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  name        String
+  description String?
+  isSystem    Boolean @default(false) @map("is_system") // true = seeded role (Super Admin), not user-deletable
+
+  customFields Json      @default("{}") @map("custom_fields")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  rolePermissions RolePermission[]
+  userRoles       UserRole[]
+
+  @@unique([organizationId, name])
+  @@map("roles")
+}
+
+// Permissions are a GLOBAL catalog defined by the application (seeded from code),
+// not tenant data — every org shares the same permission list, orgs differ only
+// in which roles/permissions they assign to which users.
+model Permission {
+  id          Int     @id @default(autoincrement())
+  code        String  @unique // e.g. "production.work_order.approve"
+  module      String  // e.g. "production" — used to group permissions in the admin UI
+  description String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  id Int @id @default(autoincrement())
+
+  roleId Int  @map("role_id")
+  role   Role @relation(fields: [roleId], references: [id])
+
+  permissionId Int        @map("permission_id")
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  id Int @id @default(autoincrement())
+
+  userId Int  @map("user_id")
+  user   User @relation(fields: [userId], references: [id])
+
+  roleId Int  @map("role_id")
+  role   Role @relation(fields: [roleId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+model RefreshToken {
+  id Int @id @default(autoincrement())
+
+  userId Int  @map("user_id")
+  user   User @relation(fields: [userId], references: [id])
+
+  tokenHash String    @map("token_hash") // never store the raw token
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("refresh_tokens")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// EXTENSIBILITY BASELINE — build once, every future module reuses these
+// ─────────────────────────────────────────────────────────────────────────
+
+// Global catalog (like Permission) — workflow states are app-defined, not
+// tenant data. If a client ever needs a custom status, add a nullable
+// organizationId later; a null org row is the shared default.
+model Status {
+  id Int @id @default(autoincrement())
+
+  module     String // e.g. "work_order", "sales_order"
+  code       String // e.g. "qa_hold"
+  label      String // e.g. "On QA Hold"
+  colorToken String @map("color_token") // brand | success | warning | error | gray — see docs/DESIGN_SYSTEM.md
+  sortOrder  Int     @default(0) @map("sort_order")
+  isTerminal Boolean @default(false) @map("is_terminal")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([module, code])
+  @@map("statuses")
+}
+
+model DocumentSequence {
+  id             Int          @id @default(autoincrement())
+  organizationId Int          @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  // Nullable: a doc type numbered per-plant (work orders, DCs) sets plantId;
+  // a doc type numbered company-wide (e.g. a single invoice series) leaves it
+  // null. Bucket 3 in the plant-scoping rule — org-owned, plant-tagged.
+  plantId Int?   @map("plant_id")
+  plant   Plant? @relation(fields: [plantId], references: [id])
+
+  docType    String @map("doc_type") // "quotation" | "sales_order" | "work_order" | ...
+  prefix     String
+  nextNumber Int    @default(1) @map("next_number")
+  format     String // e.g. "{prefix}-{plantCode}-{year}-{seq:04d}"
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([organizationId, plantId, docType])
+  @@map("document_sequences")
+}
+
+model AuditLog {
+  id             Int          @id @default(autoincrement())
+  organizationId Int          @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  actorId    Int?    @map("actor_id")
+  entityType String  @map("entity_type") // polymorphic reference, e.g. "work_order"
+  entityId   Int     @map("entity_id")
+  action     String  // "create" | "update" | "delete" | "approve" | "reject" | ...
+  before     Json?
+  after      Json?
+  ipAddress  String? @map("ip_address")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([organizationId, entityType, entityId])
+  @@map("audit_logs")
+}
+
+model StatusHistory {
+  id             Int          @id @default(autoincrement())
+  organizationId Int          @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  entityType   String  @map("entity_type")
+  entityId     Int     @map("entity_id")
+  fromStatusId Int?    @map("from_status_id")
+  toStatusId   Int     @map("to_status_id")
+  changedBy    Int?    @map("changed_by")
+  remarks      String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([organizationId, entityType, entityId])
+  @@map("status_history")
+}
+
+model Attachment {
+  id             Int          @id @default(autoincrement())
+  organizationId Int          @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  entityType    String  @map("entity_type")
+  entityId      Int     @map("entity_id")
+  fileUrl       String  @map("file_url")
+  fileName      String  @map("file_name")
+  fileType      String? @map("file_type")
+  fileSizeBytes Int?    @map("file_size_bytes")
+  uploadedBy    Int?    @map("uploaded_by")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([organizationId, entityType, entityId])
+  @@map("attachments")
+}
+
+model ApprovalWorkflow {
+  id             Int          @id @default(autoincrement())
+  organizationId Int          @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  entityType String  @map("entity_type") // which module/entity this workflow applies to
+  name       String
+  isActive   Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  steps     ApprovalStep[]
+  approvals Approval[]
+
+  @@map("approval_workflows")
+}
+
+model ApprovalStep {
+  id Int @id @default(autoincrement())
+
+  workflowId Int              @map("workflow_id")
+  workflow   ApprovalWorkflow @relation(fields: [workflowId], references: [id])
+
+  stepOrder      Int  @map("step_order")
+  approverRoleId Int? @map("approver_role_id") // who can act at this step
+  name           String
+
+  @@map("approval_steps")
+}
+
+model Approval {
+  id             Int          @id @default(autoincrement())
+  organizationId Int          @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  entityType String @map("entity_type")
+  entityId   Int    @map("entity_id")
+
+  workflowId Int              @map("workflow_id")
+  workflow   ApprovalWorkflow @relation(fields: [workflowId], references: [id])
+
+  stepOrder  Int       @map("step_order")
+  approverId Int?      @map("approver_id")
+  decision   String?   // "pending" | "approved" | "rejected"
+  remarks    String?
+  decidedAt  DateTime? @map("decided_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([organizationId, entityType, entityId])
+  @@map("approvals")
+}
+
+model Comment {
+  id             Int          @id @default(autoincrement())
+  organizationId Int          @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  entityType String @map("entity_type")
+  entityId   Int    @map("entity_id")
+  authorId   Int?   @map("author_id")
+  body       String
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([organizationId, entityType, entityId])
+  @@map("comments")
 }
