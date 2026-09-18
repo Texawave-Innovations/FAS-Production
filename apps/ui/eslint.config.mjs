@@ -1,6 +1,7 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import tailwind from "eslint-plugin-tailwindcss";
 import baseConfig from "@fas-erp/config/eslint.config.js";
 
 // Note: we can't spread @fas-erp/config's full default export here —
@@ -17,6 +18,33 @@ const eslintConfig = defineConfig([
   // (unlike the full `recommended` export) this doesn't hit the merge
   // conflict described above — mandatory per CODING_STANDARDS.md §6.
   baseConfig.enforcement,
+  {
+    // Frontend must not import database internals — Prisma types/client are
+    // an apps/api-only concern (FAS_ERP_Architecture_Guide.md's dependency
+    // direction: apps/ui depends on packages/api-types for wire shapes, never
+    // on packages/database or @prisma/client directly).
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@fas-erp/database",
+              message: "Frontend code must not import database internals — use @fas-erp/api-types for wire shapes instead.",
+            },
+            {
+              name: "@prisma/client",
+              message: "Frontend code must not import Prisma types directly — use @fas-erp/api-types for wire shapes instead.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    plugins: { tailwindcss: tailwind },
+    rules: { "tailwindcss/no-arbitrary-value": "error" },
+  },
   // Re-applied last: Next's configs can re-enable stylistic rules that
   // conflict with Prettier, which is the formatter of record (packages/config).
   baseConfig.prettier,

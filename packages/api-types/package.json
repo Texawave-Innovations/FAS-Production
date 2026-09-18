@@ -12,7 +12,9 @@
       "default": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
@@ -22,7 +24,7 @@
   },
   "devDependencies": {
     "@fas-erp/config": "workspace:*",
-    "eslint": "^10.10.0",
-    "typescript": "^5.7.0"
+    "eslint": "^9.39.5",
+    "typescript": "~6.0.3"
   }
 }

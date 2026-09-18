@@ -15,6 +15,7 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
+    "check:circular": "madge --circular --extensions ts,tsx apps/api/src apps/ui/src packages/core/src packages/api-types/src packages/ui-kit/src",
     "prepare": "husky"
   },
   "devDependencies": {
@@ -24,8 +25,9 @@
     "eslint": "^9.39.5",
     "husky": "^9.1.7",
     "lint-staged": "^17.5.1",
+    "madge": "^8.0.0",
     "prettier": "^3.9.6",
     "turbo": "^2.10.12",
-    "typescript": "^5.9.3"
+    "typescript": "~6.0.3"
   }
 }

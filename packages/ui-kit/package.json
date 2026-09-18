@@ -2,7 +2,7 @@
   "name": "@fas-erp/ui-kit",
   "version": "0.0.0",
   "private": true,
-  "description": "Shared design-system primitives (web-focused, used by apps/ui). Empty scaffold — Phase 0.",
+  "description": "Shared design-system primitives (web-focused, used by apps/ui).",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -13,11 +13,14 @@
     },
     "./theme.css": "./src/theme.css"
   },
-  "files": ["dist", "src/theme.css"],
+  "files": [
+    "dist",
+    "src/theme.css"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
-    "lint": "eslint \"src/**/*.ts\"",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "peerDependencies": {
@@ -25,8 +28,11 @@
   },
   "devDependencies": {
     "@fas-erp/config": "workspace:*",
-    "eslint": "^10.10.0",
+    "@types/react": "^19.3.0",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "^7.0.0",
+    "react": "^19.2.8",
     "tailwindcss": "^4",
-    "typescript": "^5.7.0"
+    "typescript": "~6.0.3"
   }
 }

@@ -4,10 +4,12 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { ROUTES } from "../constants/routes";
 import { useAuth } from "../features/auth/auth-context";
+import { usePermissionCheck } from "../features/auth/hooks/use-permission-check";
 
 export default function Home() {
   const { status, user, logout } = useAuth();
   const router = useRouter();
+  const permissionCheck = usePermissionCheck();
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -47,6 +49,17 @@ export default function Home() {
           <div className="flex justify-between gap-4">
             <dt className="text-gray-500 dark:text-gray-400">Active plant ID</dt>
             <dd className="text-gray-900 dark:text-white/90">{user?.activePlantId ?? "—"}</dd>
+          </div>
+          <div className="flex justify-between gap-4">
+            <dt className="text-gray-500 dark:text-gray-400">Permission check</dt>
+            <dd className="text-gray-900 dark:text-white/90">
+              {permissionCheck.isPending && "Checking…"}
+              {permissionCheck.isError && (
+                <span className="text-error-600 dark:text-error-400">Failed to check</span>
+              )}
+              {permissionCheck.isSuccess &&
+                (permissionCheck.data.ok ? "platform.user.manage: granted" : "denied")}
+            </dd>
           </div>
         </dl>
         <button

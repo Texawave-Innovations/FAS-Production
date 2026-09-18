@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono, Merriweather } from "next/font/google";
 import Script from "next/script";
 import { ToastProvider } from "../components/Toast";
 import { AuthProvider } from "../features/auth/auth-context";
+import { QueryProvider } from "../lib/query-client";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
@@ -46,7 +47,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-full flex flex-col">
         <ToastProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <QueryProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </QueryProvider>
         </ToastProvider>
       </body>
     </html>
