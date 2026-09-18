@@ -60,6 +60,15 @@ jobs:
       - name: Install Playwright's Chromium
         run: pnpm --filter ui exec playwright install --with-deps chromium
 
+      - name: Build ui and its workspace dependencies
+        # @fas-erp/core and @fas-erp/ui-kit resolve via their package.json
+        # main/exports to ./dist, which only exists after `build` runs — this
+        # job's `pnpm install` is independent of the lint-typecheck-test-build
+        # job's, so without this, `pnpm dev` below can't resolve
+        # "@fas-erp/core" (Module not found) even though it typechecks and
+        # builds fine in the other job's turbo run.
+        run: pnpm exec turbo run build --filter=ui...
+
       - name: Responsive + light/dark smoke test (apps/ui/e2e)
         # playwright.config.ts starts the Next dev server itself and only
         # exercises the login page's static rendering — no backend/DB
