@@ -13,11 +13,7 @@ import {
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import type { Request } from "express";
-import {
-  PERMISSIONS_CACHE_PREFIX,
-  PERMISSIONS_CACHE_TTL_SECONDS,
-  PERMISSION_METADATA_KEY,
-} from "../auth.constants.js";
+import { AUTH_CONSTANTS } from "../../../common/constants/auth.constants.js";
 import { AuthRepository } from "../repositories/auth.repository.js";
 import type { AccessTokenPayload } from "../types/jwt-payload.types.js";
 import { RedisService } from "../../../shared/redis/redis.service.js";
@@ -32,7 +28,7 @@ export class PermissionsGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredPermission = this.reflector.getAllAndOverride<string | undefined>(
-      PERMISSION_METADATA_KEY,
+      AUTH_CONSTANTS.PERMISSION_METADATA_KEY,
       [context.getHandler(), context.getClass()],
     );
     if (!requiredPermission) return true;
@@ -54,14 +50,18 @@ export class PermissionsGuard implements CanActivate {
   }
 
   private async getPermissionCodes(userId: number, roleId: number): Promise<string[]> {
-    const cacheKey = `${PERMISSIONS_CACHE_PREFIX}:${userId}`;
+    const cacheKey = `${AUTH_CONSTANTS.PERMISSIONS_CACHE_PREFIX}:${userId}`;
     const cached = await this.redisService.get(cacheKey);
     if (cached) {
       return JSON.parse(cached) as string[];
     }
 
     const codes = await this.authRepository.findPermissionCodesForRole(roleId);
-    await this.redisService.set(cacheKey, JSON.stringify(codes), PERMISSIONS_CACHE_TTL_SECONDS);
+    await this.redisService.set(
+      cacheKey,
+      JSON.stringify(codes),
+      AUTH_CONSTANTS.PERMISSIONS_CACHE_TTL_SECONDS,
+    );
     return codes;
   }
 }

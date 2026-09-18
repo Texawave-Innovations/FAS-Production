@@ -1,7 +1,6 @@
 // apps/api/src/config/configuration.ts
 import type { StringValue } from "ms";
-import type { Env } from "./env.schema.js";
-import { validateEnv } from "./env.schema.js";
+import { validateEnv, type Env } from "./env.schema.js";
 
 export interface AppConfig {
   app: {
@@ -21,6 +20,9 @@ export interface AppConfig {
     refreshSecret: string;
     refreshExpiresIn: StringValue;
   };
+  logging: {
+    level: Env["LOG_LEVEL"];
+  };
 }
 
 export function buildConfig(): AppConfig {
@@ -39,6 +41,9 @@ export function buildConfig(): AppConfig {
       accessExpiresIn: env.JWT_ACCESS_EXPIRES_IN as StringValue,
       refreshSecret: env.JWT_REFRESH_SECRET,
       refreshExpiresIn: env.JWT_REFRESH_EXPIRES_IN as StringValue,
+    },
+    logging: {
+      level: env.LOG_LEVEL,
     },
   };
 }

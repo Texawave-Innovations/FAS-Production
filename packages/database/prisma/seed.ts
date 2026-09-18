@@ -1,5 +1,6 @@
 // packages/database/prisma/seed.ts
 // Run via: pnpm --filter @fas-erp/database exec prisma db seed
+import { PERMISSIONS as PERMISSION_CODES } from "@fas-erp/core";
 import { PrismaClient } from "@prisma/client";
 import * as argon2 from "argon2";
 
@@ -7,22 +8,36 @@ const prisma = new PrismaClient();
 
 // ─────────────────────────────────────────────────────────────────────────
 // PERMISSION CATALOG
-// This is the master list for the whole app. Phase 1 only needs platform
-// permissions — RBAC/auth is the only thing that exists right now. As each
-// business module gets built later, its permission strings get ADDED here
-// (e.g. 'production.work_order.create' when the Production module lands).
-// Nothing else about RBAC changes when that happens.
+// Codes come from packages/core/src/constants/permissions.constants.ts — the
+// single source of truth shared with apps/api's guards and, eventually,
+// apps/ui's permission-gated UI. This seed script only adds the
+// module/description metadata that's seed-specific. As each business module
+// gets built later, its permission strings get ADDED to that shared const
+// (e.g. 'production.work_order.create' when the Production module lands),
+// and a matching row here. Nothing else about RBAC changes when that happens.
 // Pattern: <module>.<entity>.<action>
 // ─────────────────────────────────────────────────────────────────────────
 const PERMISSIONS: Array<{ code: string; module: string; description: string }> = [
-  { code: "platform.user.manage", module: "platform", description: "Create/edit/deactivate users" },
   {
-    code: "platform.role.manage",
+    code: PERMISSION_CODES.PLATFORM_USER_MANAGE,
+    module: "platform",
+    description: "Create/edit/deactivate users",
+  },
+  {
+    code: PERMISSION_CODES.PLATFORM_ROLE_MANAGE,
     module: "platform",
     description: "Create/edit roles and assign permissions",
   },
-  { code: "platform.plant.manage", module: "platform", description: "Create/edit plants" },
-  { code: "platform.audit.view", module: "platform", description: "View audit logs" },
+  {
+    code: PERMISSION_CODES.PLATFORM_PLANT_MANAGE,
+    module: "platform",
+    description: "Create/edit plants",
+  },
+  {
+    code: PERMISSION_CODES.PLATFORM_AUDIT_VIEW,
+    module: "platform",
+    description: "View audit logs",
+  },
 ];
 
 async function main() {

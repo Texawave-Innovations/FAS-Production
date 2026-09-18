@@ -53,7 +53,15 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
     if (res.status === HttpStatusNoContent) return undefined;
     const contentType = res.headers.get("content-type");
     if (!contentType?.includes("application/json")) return undefined;
-    return res.json();
+    const body: unknown = await res.json();
+    // Every successful apps/api response is wrapped as { data, meta } (see
+    // common/interceptors/response.interceptor.ts) — unwrapped once here so
+    // every call site keeps working against the inner shape, matching what
+    // packages/api-types' types actually describe. Error bodies (see
+    // common/filters/all-exceptions.filter.ts) don't have this shape and
+    // pass through unchanged for isErrorBody() below to read `message` off.
+    if (res.ok && isEnvelope(body)) return body.data;
+    return body;
   }
 
   async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -95,4 +103,8 @@ function isErrorBody(body: unknown): body is { message: string } {
     body !== null &&
     typeof (body as { message?: unknown }).message === "string"
   );
+}
+
+function isEnvelope(body: unknown): body is { data: unknown; meta: unknown } {
+  return typeof body === "object" && body !== null && "data" in body && "meta" in body;
 }

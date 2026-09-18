@@ -26,6 +26,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@fas-erp/core": "workspace:^",
     "@prisma/client": "^6.19.3",
     "argon2": "^0.45.1"
   },

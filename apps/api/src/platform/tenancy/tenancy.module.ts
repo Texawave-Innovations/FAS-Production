@@ -16,6 +16,7 @@ import { Global, Module } from "@nestjs/common";
 import { ClsModule, ClsService } from "nestjs-cls";
 import { JwtModule, JwtService } from "@nestjs/jwt";
 import type { Request } from "express";
+import { getOrCreateCorrelationId } from "../../common/utils/correlation-id.util.js";
 import { AppConfigService } from "../../config/app-config.service.js";
 import type { AccessTokenPayload } from "../auth/types/jwt-payload.types.js";
 import type { AppClsStore } from "./tenancy.types.js";
@@ -31,6 +32,12 @@ import type { AppClsStore } from "./tenancy.types.js";
         middleware: {
           mount: true,
           setup: (cls: ClsService<AppClsStore>, req: Request) => {
+            // First line, before any tenancy resolution: getOrCreateCorrelationId
+            // is idempotent, so it doesn't matter whether nestjs-pino's
+            // genReqId or this callback runs first for a given request — see
+            // that util's file comment.
+            cls.set("correlationId", getOrCreateCorrelationId(req));
+
             const authHeader = req.headers.authorization;
             if (!authHeader?.startsWith("Bearer ")) return;
 

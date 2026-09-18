@@ -2,6 +2,7 @@
 const js = require("@eslint/js");
 const tseslint = require("typescript-eslint");
 const eslintConfigPrettier = require("eslint-config-prettier");
+const sonarjs = require("eslint-plugin-sonarjs");
 
 /** @type {import("eslint").Linter.Config} */
 const ignores = {
@@ -13,6 +14,24 @@ const ignores = {
     "**/node_modules/**",
     "**/coverage/**",
   ],
+};
+
+// Mandatory enforcement rules per CODING_STANDARDS.md §6 ("Reuse, don't
+// recreate"): sonarjs/no-identical-functions flags copy-pasted logic that
+// should have been pulled into packages/core or apps/api/src/shared instead,
+// no-duplicate-imports (ESLint core — no plugin needed; eslint-plugin-import's
+// flat-config release doesn't actually expose a rule under this name despite
+// the "import/" prefix CODING_STANDARDS.md historically used) catches the
+// same module imported twice across separate statements. Registered as
+// individual rules rather than pulling in sonarjs's full recommended config,
+// to avoid unrelated churn against existing files.
+/** @type {import("eslint").Linter.Config} */
+const enforcement = {
+  plugins: { sonarjs },
+  rules: {
+    "sonarjs/no-identical-functions": "error",
+    "no-duplicate-imports": "error",
+  },
 };
 
 /**
@@ -29,9 +48,16 @@ const ignores = {
  *
  * @type {import("eslint").Linter.Config[]}
  */
-const recommended = [ignores, js.configs.recommended, ...tseslint.configs.recommended, eslintConfigPrettier];
+const recommended = [
+  ignores,
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  enforcement,
+  eslintConfigPrettier,
+];
 
 module.exports = recommended;
 module.exports.ignores = ignores;
 module.exports.prettier = eslintConfigPrettier;
+module.exports.enforcement = enforcement;
 module.exports.recommended = recommended;

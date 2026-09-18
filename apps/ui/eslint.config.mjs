@@ -13,6 +13,10 @@ const eslintConfig = defineConfig([
   baseConfig.ignores,
   ...nextVitals,
   ...nextTs,
+  // sonarjs/import don't register a "@typescript-eslint" plugin instance, so
+  // (unlike the full `recommended` export) this doesn't hit the merge
+  // conflict described above — mandatory per CODING_STANDARDS.md §6.
+  baseConfig.enforcement,
   // Re-applied last: Next's configs can re-enable stylistic rules that
   // conflict with Prettier, which is the formatter of record (packages/config).
   baseConfig.prettier,

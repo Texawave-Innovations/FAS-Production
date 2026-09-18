@@ -5,6 +5,7 @@ import { PassportModule } from "@nestjs/passport";
 import { AuthController } from "./auth.controller.js";
 import { AuthService } from "./auth.service.js";
 import { PermissionsGuard } from "./guards/permissions.guard.js";
+import { UserLoggedInListener } from "./listeners/user-logged-in.listener.js";
 import { AuthRepository } from "./repositories/auth.repository.js";
 import { JwtAccessStrategy } from "./strategies/jwt-access.strategy.js";
 
@@ -13,7 +14,13 @@ import { JwtAccessStrategy } from "./strategies/jwt-access.strategy.js";
   // vs refresh use different secrets), so JwtModule needs no default options.
   imports: [JwtModule.register({}), PassportModule.register({ defaultStrategy: "jwt" })],
   controllers: [AuthController],
-  providers: [AuthService, AuthRepository, JwtAccessStrategy, PermissionsGuard],
+  providers: [
+    AuthService,
+    AuthRepository,
+    JwtAccessStrategy,
+    PermissionsGuard,
+    UserLoggedInListener,
+  ],
   exports: [PermissionsGuard],
 })
 export class AuthModule {}

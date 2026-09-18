@@ -21,4 +21,8 @@ export class AppConfigService {
   get jwt(): AppConfig["jwt"] {
     return this.configService.getOrThrow<AppConfig["jwt"]>("jwt");
   }
+
+  get logging(): AppConfig["logging"] {
+    return this.configService.getOrThrow<AppConfig["logging"]>("logging");
+  }
 }

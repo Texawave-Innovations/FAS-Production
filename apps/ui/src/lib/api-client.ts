@@ -4,9 +4,10 @@
 // A 401 triggers exactly one silent-refresh attempt before giving up — see
 // createApiClient's onUnauthorized in packages/core.
 import { createApiClient, createAuthClient } from "@fas-erp/core";
+import { API_CONFIG } from "../constants/api-endpoints";
 import { getAccessToken, setAccessToken } from "./token-store";
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? API_CONFIG.DEFAULT_BASE_URL;
 
 export const apiClient = createApiClient({
   baseUrl,

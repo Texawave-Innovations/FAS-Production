@@ -4,15 +4,14 @@
 // it, so a route handler never forgets @UseGuards(JwtAuthGuard).
 //
 // Usage: @RequirePermission('production.work_order.approve')
-import { UseGuards, applyDecorators } from "@nestjs/common";
-import { SetMetadata } from "@nestjs/common";
-import { PERMISSION_METADATA_KEY } from "../auth.constants.js";
+import { SetMetadata, UseGuards, applyDecorators } from "@nestjs/common";
+import { AUTH_CONSTANTS } from "../../../common/constants/auth.constants.js";
 import { JwtAuthGuard } from "../guards/jwt-auth.guard.js";
 import { PermissionsGuard } from "../guards/permissions.guard.js";
 
 export function RequirePermission(permission: string): MethodDecorator & ClassDecorator {
   return applyDecorators(
-    SetMetadata(PERMISSION_METADATA_KEY, permission),
+    SetMetadata(AUTH_CONSTANTS.PERMISSION_METADATA_KEY, permission),
     UseGuards(JwtAuthGuard, PermissionsGuard),
   );
 }

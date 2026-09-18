@@ -140,11 +140,15 @@ apps/api/
 │   │       ├── vendor-bills/
 │   │       └── financial-reports/
 │   │
-│   ├── common/                          # framework-agnostic helpers within api
+│   ├── common/                          # request-pipeline framework primitives (see
+│   │   │                                # CODING_STANDARDS.md for the common/ vs shared/ split)
+│   │   ├── constants/                   # auth.constants.ts, permissions.constants.ts, ...
+│   │   ├── exceptions/                  # BusinessException hierarchy
 │   │   ├── filters/                     # global exception filter
-│   │   ├── interceptors/                # response-shape, logging, audit
-│   │   ├── pipes/                       # validation
-│   │   ├── decorators/                  # @Paginate(), @OrgScoped()
+│   │   ├── interceptors/                # response envelope, entity serialization
+│   │   ├── decorators/                  # @Paginate(), @OrgScoped(), @RawResponse()
+│   │   ├── dto/                         # PaginationDto, PaginatedResponseDto
+│   │   ├── logger/                      # nestjs-pino wiring
 │   │   └── utils/
 │   │
 │   └── config/                          # env validation (zod/joi), typed config service
@@ -308,7 +312,15 @@ comments          (id, org_id, entity_type, entity_id, author_id, body, created_
 ### 6.5 Full table inventory by module
 
 **Platform / Auth**
-`organizations`, `users`, `roles`, `permissions`, `role_permissions`, `user_roles`, `refresh_tokens`, `statuses`, `document_sequences`, `audit_logs`, `status_history`, `attachments`, `approvals`, `approval_workflows`, `approval_steps`
+`organizations`, `users`, `roles`, `permissions`, `role_permissions`, `user_roles`, `refresh_tokens` *(unused — see deviation note below)*, `statuses`, `document_sequences`, `audit_logs`, `status_history`, `attachments`, `approvals`, `approval_workflows`, `approval_steps`
+
+> **Deviation:** `refresh_tokens` is modeled here but not used. `platform/auth` stores
+> refresh tokens in Redis instead (`refresh:{userId}:{jti}`, set in
+> `AuthService.issueTokenPair`/rotated in `refresh`/revoked in `logout` — see
+> `apps/api/src/platform/auth/auth.service.ts`), so token revocation is O(1) and
+> tokens naturally expire via Redis TTL instead of needing a cleanup job against a
+> growing table. This was a deliberate choice made after this table was designed —
+> don't "fix" the Prisma model back into use without revisiting that tradeoff first.
 
 **Master Data**
 `items`, `item_categories`, `units_of_measure`, `boms`, `bom_versions`, `bom_lines`, `routings`, `routing_versions`, `routing_operations`, `quality_parameters`, `warehouses`, `warehouse_locations`, `chart_of_accounts`, `finance_heads`, `departments`, `designations`, `shifts`, `sales_terms`, `tax_codes`
@@ -512,7 +524,7 @@ Everything in this list is mechanical and safe to hand to an agent in one shot �
 
 Once the base repo exists, the next two things need to land together, because auth can't be tested without at least one real table and the schema's baseline conventions (§6.1–6.4) need to exist before *any* business table is written:
 
-1. **Prisma schema, platform layer only:** `organizations`, `users`, `roles`, `permissions`, `role_permissions`, `user_roles`, `refresh_tokens`, `statuses`, `document_sequences`, `audit_logs`, `status_history`, `attachments`, `approvals`, `approval_workflows`, `approval_steps` — plus the `custom_fields`/soft-delete/audit-column baseline (§6.1) applied everywhere. First migration, first seed script (a demo org + a Super Admin role with every permission).
+1. **Prisma schema, platform layer only:** `organizations`, `users`, `roles`, `permissions`, `role_permissions`, `user_roles`, `refresh_tokens` (modeled but unused — see §6.5's deviation note, refresh tokens actually live in Redis), `statuses`, `document_sequences`, `audit_logs`, `status_history`, `attachments`, `approvals`, `approval_workflows`, `approval_steps` — plus the `custom_fields`/soft-delete/audit-column baseline (§6.1) applied everywhere. First migration, first seed script (a demo org + a Super Admin role with every permission).
 2. **Auth module end-to-end:** `platform/auth` (signup, login, refresh, password reset) on the API, wired to bcrypt/argon2 password hashing, JWT access+refresh, and `platform/tenancy`'s `ClsService`. On the UI: `(unauthenticated)` route group with login/signup/forgot-password pages, `(authenticated)` shell behind `middleware.ts`.
 3. **RBAC skeleton:** seed `roles`/`permissions` tables, build the `PermissionsGuard` + `@RequirePermission()` decorator, and prove it works on one dummy protected route before building a single business module on top of it.
 

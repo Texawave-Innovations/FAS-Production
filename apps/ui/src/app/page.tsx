@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { ROUTES } from "../constants/routes";
 import { useAuth } from "../features/auth/auth-context";
 
 export default function Home() {
@@ -10,7 +11,7 @@ export default function Home() {
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.replace("/login");
+      router.replace(ROUTES.LOGIN);
     }
   }, [status, router]);
 

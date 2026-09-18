@@ -3,3 +3,4 @@
 export * from "./api/client.js";
 export * from "./auth/auth-client.js";
 export * from "./auth/types.js";
+export * from "./constants/permissions.constants.js";

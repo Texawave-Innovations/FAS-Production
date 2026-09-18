@@ -1,11 +1,14 @@
 // apps/api/src/platform/auth/auth.service.ts
 import { randomUUID } from "node:crypto";
 import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { JwtService } from "@nestjs/jwt";
+import { AUTH_CONSTANTS } from "../../common/constants/auth.constants.js";
 import { AppConfigService } from "../../config/app-config.service.js";
 import { RedisService } from "../../shared/redis/redis.service.js";
 import { parseDurationToSeconds } from "../../shared/utils/duration.util.js";
-import { PERMISSIONS_CACHE_PREFIX, REFRESH_TOKEN_KEY_PREFIX } from "./auth.constants.js";
+import { UserEntity } from "./entities/user.entity.js";
+import { AUTH_EVENTS, UserLoggedInEvent } from "./events/user-logged-in.event.js";
 import { AuthRepository } from "./repositories/auth.repository.js";
 import type { AccessTokenPayload, RefreshTokenPayload } from "./types/jwt-payload.types.js";
 import { verifyPassword } from "./utils/password.util.js";
@@ -15,31 +18,8 @@ export interface TokenPair {
   refreshToken: string;
 }
 
-export interface AuthUser {
-  id: number;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
-  organizationId: number;
-  activePlantId: number | null;
-  roleId: number | null;
-}
-
 export interface LoginResult extends TokenPair {
-  user: AuthUser;
-}
-
-// Shape returned by AuthRepository's findActiveUserBy{Email,Id} — narrowed
-// to just what toAuthUser() needs, so the mapper doesn't depend on Prisma's
-// generated payload type directly.
-interface AuthUserRow {
-  id: number;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
-  organizationId: number;
-  userRoles: Array<{ roleId: number }>;
-  plantAccess: Array<{ plantId: number }>;
+  user: UserEntity;
 }
 
 @Injectable()
@@ -49,6 +29,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly appConfig: AppConfigService,
     private readonly redisService: RedisService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async login(email: string, password: string): Promise<LoginResult> {
@@ -59,27 +40,31 @@ export class AuthService {
       throw new UnauthorizedException("Invalid email or password");
     }
 
-    const authUser = this.toAuthUser(user);
+    const userEntity = UserEntity.fromUser(user);
     const tokens = await this.issueTokenPair({
-      sub: authUser.id,
-      organizationId: authUser.organizationId,
-      activePlantId: authUser.activePlantId,
-      roleId: authUser.roleId,
+      sub: userEntity.id,
+      organizationId: userEntity.organizationId,
+      activePlantId: userEntity.activePlantId,
+      roleId: userEntity.roleId,
     });
-    await this.cachePermissions(authUser.id, authUser.roleId);
+    await this.cachePermissions(userEntity.id, userEntity.roleId);
+    this.eventEmitter.emit(
+      AUTH_EVENTS.USER_LOGGED_IN,
+      new UserLoggedInEvent(userEntity.id, userEntity.organizationId),
+    );
 
-    return { ...tokens, user: authUser };
+    return { ...tokens, user: userEntity };
   }
 
   // Backs GET /auth/me — lets the UI hydrate/restore session state (after a
   // page reload, once a silent refresh has produced a fresh access token)
-  // from the same AuthUser shape login() returns.
-  async getProfile(userId: number): Promise<AuthUser> {
+  // from the same UserEntity shape login() returns.
+  async getProfile(userId: number): Promise<UserEntity> {
     const user = await this.authRepository.findActiveUserById(userId);
     if (!user) {
       throw new UnauthorizedException("User is no longer active");
     }
-    return this.toAuthUser(user);
+    return UserEntity.fromUser(user);
   }
 
   async refresh(refreshToken: string | undefined): Promise<TokenPair> {
@@ -110,14 +95,14 @@ export class AuthService {
       throw new UnauthorizedException("User is no longer active");
     }
 
-    const authUser = this.toAuthUser(user);
+    const userEntity = UserEntity.fromUser(user);
     const tokens = await this.issueTokenPair({
-      sub: authUser.id,
-      organizationId: authUser.organizationId,
-      activePlantId: authUser.activePlantId,
-      roleId: authUser.roleId,
+      sub: userEntity.id,
+      organizationId: userEntity.organizationId,
+      activePlantId: userEntity.activePlantId,
+      roleId: userEntity.roleId,
     });
-    await this.cachePermissions(authUser.id, authUser.roleId);
+    await this.cachePermissions(userEntity.id, userEntity.roleId);
     return tokens;
   }
 
@@ -129,7 +114,7 @@ export class AuthService {
         secret: this.appConfig.jwt.refreshSecret,
       });
       await this.redisService.del(this.refreshKey(payload.sub, payload.jti));
-      await this.redisService.del(`${PERMISSIONS_CACHE_PREFIX}:${payload.sub}`);
+      await this.redisService.del(`${AUTH_CONSTANTS.PERMISSIONS_CACHE_PREFIX}:${payload.sub}`);
     } catch {
       // Already expired/invalid/foreign — nothing to revoke. Logout stays
       // idempotent rather than erroring on a token that's already dead.
@@ -160,25 +145,13 @@ export class AuthService {
     const codes = await this.authRepository.findPermissionCodesForRole(roleId);
     const ttlSeconds = parseDurationToSeconds(this.appConfig.jwt.accessExpiresIn);
     await this.redisService.set(
-      `${PERMISSIONS_CACHE_PREFIX}:${userId}`,
+      `${AUTH_CONSTANTS.PERMISSIONS_CACHE_PREFIX}:${userId}`,
       JSON.stringify(codes),
       ttlSeconds,
     );
   }
 
   private refreshKey(userId: number, jti: string): string {
-    return `${REFRESH_TOKEN_KEY_PREFIX}:${userId}:${jti}`;
-  }
-
-  private toAuthUser(user: AuthUserRow): AuthUser {
-    return {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      organizationId: user.organizationId,
-      activePlantId: user.plantAccess[0]?.plantId ?? null,
-      roleId: user.userRoles[0]?.roleId ?? null,
-    };
+    return `${AUTH_CONSTANTS.REFRESH_TOKEN_KEY_PREFIX}:${userId}:${jti}`;
   }
 }

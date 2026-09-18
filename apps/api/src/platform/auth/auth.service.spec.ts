@@ -43,14 +43,18 @@ function buildService() {
     set: vi.fn(),
     del: vi.fn(),
   };
+  const eventEmitter = {
+    emit: vi.fn(),
+  };
 
   const service = new AuthService(
     authRepository as never,
     jwtService as never,
     appConfig as never,
     redisService as never,
+    eventEmitter as never,
   );
-  return { service, authRepository, jwtService, redisService };
+  return { service, authRepository, jwtService, redisService, eventEmitter };
 }
 
 describe("AuthService", () => {

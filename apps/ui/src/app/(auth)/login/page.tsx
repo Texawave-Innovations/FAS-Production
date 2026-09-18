@@ -7,8 +7,8 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <div className="flex flex-1 items-center justify-center px-6 py-16">
-      <div className="w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-8 shadow-theme-md dark:border-gray-800 dark:bg-white/[0.03]">
+    <div className="flex flex-1 items-center justify-center px-4 py-10 sm:px-6 sm:py-16">
+      <div className="w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-md sm:p-8 dark:border-gray-800 dark:bg-white/[0.03]">
         <div className="mb-8 flex flex-col gap-1.5">
           <h1 className="text-title-sm font-semibold text-gray-900 dark:text-white/90">
             Sign in to FAS ERP

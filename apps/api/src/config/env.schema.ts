@@ -22,6 +22,8 @@ export const envSchema = z.object({
     .string()
     .regex(/^\d+(s|m|h|d|w)$/, 'expected a duration like "15m" or "7d"')
     .default("7d"),
+
+  LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
 });
 
 export type Env = z.infer<typeof envSchema>;
