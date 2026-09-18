@@ -2,5 +2,21 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true
-  }
+  },
+  // expo/tsconfig.base sets allowJs: true (needed for RN JS interop), so tsc
+  // would otherwise pull in eslint.config.mjs and, transitively, untyped CJS
+  // configs it imports (e.g. eslint-config-prettier has no .d.ts) — apps/api
+  // and the packages/* don't hit this because their base tsconfig
+  // (@fas-erp/config/tsconfig.base.json) doesn't set allowJs, so .js/.mjs
+  // files are invisible to tsc there. Re-list expo's own excludes since a
+  // child "exclude" replaces rather than merges with the parent's.
+  "exclude": [
+    "node_modules",
+    "babel.config.js",
+    "metro.config.js",
+    "jest.config.js",
+    "android",
+    "ios",
+    "eslint.config.mjs"
+  ]
 }

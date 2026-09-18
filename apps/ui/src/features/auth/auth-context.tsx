@@ -2,6 +2,7 @@
 "use client";
 
 import { ApiError, type AuthUser } from "@fas-erp/core";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   createContext,
   useCallback,
@@ -28,6 +29,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [user, setUser] = useState<AuthUser | null>(null);
+  const queryClient = useQueryClient();
 
   // On first load there's no access token in memory (a page refresh clears
   // it), but a valid httpOnly refresh cookie may still be sitting in the
@@ -73,8 +75,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAccessToken(null);
       setUser(null);
       setStatus("unauthenticated");
+      // Org/plant-scoped query cache must not survive a logout (or an
+      // org/plant switch, once that exists) — otherwise the next user's
+      // first render can flash the previous user's cached data. See
+      // FAS_ERP_CODING_STANDARDS.md's "Frontend data fetching" section.
+      queryClient.clear();
     }
-  }, []);
+  }, [queryClient]);
 
   const value = useMemo(() => ({ status, user, login, logout }), [status, user, login, logout]);
 

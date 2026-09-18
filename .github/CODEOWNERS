@@ -1,0 +1,21 @@
+# CODEOWNERS — requires "Require review from Code Owners" to be enabled in
+# GitHub branch protection for main (Settings → Branches) before this has any
+# enforcement effect; see CLAUDE.md's "Repository settings" note. A
+# CODEOWNERS file alone does not gate merges.
+#
+# @Texawave-Innovations is the only verified collaborator on this repo as of
+# this writing (checked via `gh api repos/.../collaborators`) — update this
+# file with real per-area owners as the team grows. Do not add a name here
+# that hasn't actually been given collaborator access.
+
+# Sensitive shared areas (FAS_ERP_CODING_STANDARDS.md / CLAUDE.md's
+# "changes that need lead review" list):
+/CLAUDE.md                          @Texawave-Innovations
+/docs/                              @Texawave-Innovations
+/packages/config/                   @Texawave-Innovations
+/packages/core/                     @Texawave-Innovations
+/packages/ui-kit/                   @Texawave-Innovations
+/packages/database/                 @Texawave-Innovations
+/apps/api/src/platform/             @Texawave-Innovations
+/apps/api/src/common/               @Texawave-Innovations
+/.github/                           @Texawave-Innovations

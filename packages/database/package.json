@@ -33,9 +33,9 @@
   "devDependencies": {
     "@fas-erp/config": "workspace:*",
     "dotenv": "^16.4.7",
-    "eslint": "^10.10.0",
+    "eslint": "^9.39.5",
     "prisma": "^6.19.3",
     "tsx": "^4.23.13",
-    "typescript": "^5.7.0"
+    "typescript": "~6.0.3"
   }
 }

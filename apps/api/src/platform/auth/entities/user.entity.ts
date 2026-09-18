@@ -3,6 +3,7 @@
 // CODING_STANDARDS.md): a response shape needed here because it differs
 // from the raw Prisma User model — it flattens activePlantId/roleId out of
 // nested relations and must never expose passwordHash.
+import { ApiProperty } from "@nestjs/swagger";
 import { Exclude, Expose } from "class-transformer";
 
 // Shape returned by AuthRepository's findActiveUserBy{Email,Id} — narrowed
@@ -28,24 +29,31 @@ export interface AuthUserRow {
 // can never reach a response body no matter how this entity gets
 // constructed, instead of relying on every call site to hand-omit it.
 export class UserEntity {
+  @ApiProperty()
   @Expose()
   id: number;
 
+  @ApiProperty()
   @Expose()
   email: string;
 
+  @ApiProperty({ nullable: true, type: String })
   @Expose()
   firstName: string | null;
 
+  @ApiProperty({ nullable: true, type: String })
   @Expose()
   lastName: string | null;
 
+  @ApiProperty()
   @Expose()
   organizationId: number;
 
+  @ApiProperty({ nullable: true, type: Number })
   @Expose()
   activePlantId: number | null;
 
+  @ApiProperty({ nullable: true, type: Number })
   @Expose()
   roleId: number | null;
 

@@ -17,5 +17,11 @@
     "isolatedModules": true,
     "incremental": true
   },
-  "exclude": ["node_modules", "dist", "build", ".next", ".turbo"]
+  "exclude": [
+    "${configDir}/node_modules",
+    "${configDir}/dist",
+    "${configDir}/build",
+    "${configDir}/.next",
+    "${configDir}/.turbo"
+  ]
 }
